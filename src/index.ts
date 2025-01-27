@@ -144,24 +144,39 @@ class CodeResearchServer {
       // Build search query with language filter if specified
       const q = language ? `${query} language:${language}` : query;
       
+      // If GitHub token is invalid, fall back to unauthenticated requests
+      const makeRequest = async (endpoint: string, params: any) => {
+        try {
+          const response = await this.githubInstance.get(endpoint, { params });
+          return response;
+        } catch (error) {
+          if (axios.isAxiosError(error) && error.response?.status === 401) {
+            // Retry without auth token
+            const response = await this.axiosInstance.get(`https://api.github.com${endpoint}`, {
+              params,
+              headers: {
+                'Accept': 'application/vnd.github.v3+json',
+                'User-Agent': 'CodeResearchBot/1.0'
+              }
+            });
+            return response;
+          }
+          throw error;
+        }
+      };
+
       const [reposResponse, codeResponse] = await Promise.all([
-        // Search repositories
-        this.githubInstance.get('/search/repositories', {
-          params: {
-            q,
-            sort: 'stars',
-            order: 'desc',
-            per_page: limit
-          }
+        makeRequest('/search/repositories', {
+          q,
+          sort: 'stars',
+          order: 'desc',
+          per_page: limit
         }),
-        // Search code
-        this.githubInstance.get('/search/code', {
-          params: {
-            q,
-            sort: 'indexed',
-            order: 'desc',
-            per_page: limit
-          }
+        makeRequest('/search/code', {
+          q,
+          sort: 'indexed',
+          order: 'desc',
+          per_page: limit
         })
       ]);
 
@@ -259,19 +274,35 @@ class CodeResearchServer {
     if (cached) return cached;
 
     try {
-      const [so, mdn, gh, npm, pypi] = await Promise.all([
-        this.searchStackOverflow(query, limit),
-        this.searchMDN(query),
-        this.searchGitHub(query, undefined, limit),
-        this.searchNpm(query, limit),
-        this.searchPyPI(query)
+      // Execute non-GitHub searches first
+      const [so, mdn, npm, pypi] = await Promise.all([
+        this.searchStackOverflow(query, limit).catch(error =>
+          `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+        ),
+        this.searchMDN(query).catch(error =>
+          `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+        ),
+        this.searchNpm(query, limit).catch(error =>
+          `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+        ),
+        this.searchPyPI(query).catch(error =>
+          `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+        )
       ]);
 
-      const results = `=== Stack Overflow Results ===\n${so}\n\n` +
-                     `=== MDN Documentation ===\n${mdn}\n\n` +
-                     `=== GitHub Results ===\n${gh}\n\n` +
-                     `=== npm Packages ===\n${npm}\n\n` +
-                     `=== PyPI Packages ===\n${pypi}`;
+      let results = `=== Stack Overflow Results ===\n${so}\n\n` +
+                   `=== MDN Documentation ===\n${mdn}\n\n`;
+
+      // Try GitHub search separately
+      try {
+        const gh = await this.searchGitHub(query, undefined, limit);
+        results += `=== GitHub Results ===\n${gh}\n\n`;
+      } catch (error) {
+        results += `=== GitHub Results ===\nGitHub search currently unavailable\n\n`;
+      }
+
+      results += `=== npm Packages ===\n${npm}\n\n` +
+                `=== PyPI Packages ===\n${pypi}`;
 
       cache.set(cacheKey, results);
       return results;

@@ -88,37 +88,32 @@ npm install
 npm run build
 ```
 
-3. Configure environment variables (optional):
+3. Configure MCP Settings:
 
-- Create an `.env` file
-``cp .env .env.local``
-- Configure your environment variables in the `.env.local` file. This will not be synchronised with Github.
+Add the server configuration to your MCP settings file:
 
-4. Add to Claude Desktop configuration:
+- VSCode: `~/.vscode-server/data/User/globalStorage/rooveterinaryinc.roo-cline/settings/cline_mcp_settings.json`
+- Claude Desktop:
+  - MacOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+  - Windows: `%APPDATA%/Claude/claude_desktop_config.json`
 
-MacOS:
-```bash
-vim ~/Library/Application\ Support/Claude/claude_desktop_config.json
-```
-
-Windows:
-```bash
-notepad %APPDATA%/Claude/claude_desktop_config.json
-```
-
-Add the server configuration:
 ```json
 {
   "mcpServers": {
-    "code-research-server": {
-      "command": "/absolute/path/to/code-research-server/build/index.js",
+    "code-research": {
+      "command": "node",
+      "args": ["/absolute/path/to/code-research-mcp-server/build/index.js"],
       "env": {
-        "GITHUB_TOKEN": "your_github_token"  // Optional: Will prevent hitting limits early.
-      }
+        "GITHUB_TOKEN": "your_github_token"  // Optional: Prevents rate limiting
+      },
+      "disabled": false,
+      "alwaysAllow": []
     }
   }
 }
 ```
+
+Note: Replace `/absolute/path/to` with the actual path where you cloned the repository.
 
 ## Development
 
