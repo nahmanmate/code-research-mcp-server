@@ -54,6 +54,20 @@ Search PyPI for Python packages.
 - Returns: Detailed package information including version, author, and links
 - Results are cached for 1 hour
 
+#### `search_all`
+Search all platforms simultaneously for comprehensive results.
+- Parameters:
+  - `query` (required): Search query string
+  - `limit` (optional): Maximum results per platform (1-5, default: 3)
+- Returns: Combined results from all platforms:
+  1. Stack Overflow questions and answers
+  2. MDN documentation
+  3. GitHub repositories and code
+  4. npm packages
+  5. PyPI packages
+- Results are cached for 1 hour
+- Note: Executes all searches in parallel for faster response
+
 ## Requirements
 
 - Node.js >= 20.11.0
@@ -64,7 +78,7 @@ Search PyPI for Python packages.
 
 1. Clone the repository and install dependencies:
 ```bash
-git clone [repository-url]
+git clone https://github.com/nahmanmate/code-research-mcp-server.git
 cd code-research-server
 npm install
 ```
@@ -75,9 +89,10 @@ npm run build
 ```
 
 3. Configure environment variables (optional):
-```bash
-export GITHUB_TOKEN=your_github_token  # Optional: For higher GitHub API rate limits
-```
+
+- Create an `.env` file
+``cp .env .env.local``
+- Configure your environment variables in the `.env.local` file. This will not be synchronised with Github.
 
 4. Add to Claude Desktop configuration:
 
@@ -156,4 +171,4 @@ Results are cached using `node-cache`:
 
 ## License
 
-[Add License Information]
+AGPLv3

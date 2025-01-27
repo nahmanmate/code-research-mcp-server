@@ -253,6 +253,36 @@ class CodeResearchServer {
     }
   }
 
+  private async searchAll(query: string, limit: number = 3): Promise<string> {
+    const cacheKey = `all:${query}:${limit}`;
+    const cached = cache.get<string>(cacheKey);
+    if (cached) return cached;
+
+    try {
+      const [so, mdn, gh, npm, pypi] = await Promise.all([
+        this.searchStackOverflow(query, limit),
+        this.searchMDN(query),
+        this.searchGitHub(query, undefined, limit),
+        this.searchNpm(query, limit),
+        this.searchPyPI(query)
+      ]);
+
+      const results = `=== Stack Overflow Results ===\n${so}\n\n` +
+                     `=== MDN Documentation ===\n${mdn}\n\n` +
+                     `=== GitHub Results ===\n${gh}\n\n` +
+                     `=== npm Packages ===\n${npm}\n\n` +
+                     `=== PyPI Packages ===\n${pypi}`;
+
+      cache.set(cacheKey, results);
+      return results;
+    } catch (error) {
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Search all platforms error: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
   private setupToolHandlers() {
     this.server.setRequestHandler(ListToolsRequestSchema, async () => ({
       tools: [
@@ -347,6 +377,26 @@ class CodeResearchServer {
             },
             required: ['query']
           }
+        },
+        {
+          name: 'search_all',
+          description: 'Search all platforms simultaneously',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              query: {
+                type: 'string',
+                description: 'Search query'
+              },
+              limit: {
+                type: 'number',
+                description: 'Maximum results per platform (1-5, default: 3)',
+                minimum: 1,
+                maximum: 5
+              }
+            },
+            required: ['query']
+          }
         }
       ]
     }));
@@ -412,6 +462,19 @@ class CodeResearchServer {
         case 'search_pypi': {
           const { query } = request.params.arguments as { query: string };
           const results = await this.searchPyPI(query);
+          return {
+            content: [
+              {
+                type: 'text',
+                text: results
+              }
+            ]
+          };
+        }
+
+        case 'search_all': {
+          const { query, limit } = request.params.arguments as { query: string; limit?: number };
+          const results = await this.searchAll(query, limit);
           return {
             content: [
               {
