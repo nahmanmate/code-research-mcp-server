@@ -2,6 +2,8 @@
 
 A Model Context Protocol server that provides tools for searching and accessing programming resources across multiple platforms. This server integrates with popular developer platforms to help LLMs find relevant code examples, documentation, and packages.
 
+<a href="https://glama.ai/mcp/servers/8ibodeufsz"><img width="380" height="200" src="https://glama.ai/mcp/servers/8ibodeufsz/badge" alt="Code Research Server MCP server" /></a>
+
 ## Features
 
 ### Integrated Platforms
