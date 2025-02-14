@@ -1,4 +1,5 @@
 # Code Research MCP Server
+[![smithery badge](https://smithery.ai/badge/@nahmanmate/code-research-mcp-server)](https://smithery.ai/server/@nahmanmate/code-research-mcp-server)
 
 A Model Context Protocol server that provides tools for searching and accessing programming resources across multiple platforms. This server integrates with popular developer platforms to help LLMs find relevant code examples, documentation, and packages.
 
@@ -78,6 +79,15 @@ Search all platforms simultaneously for comprehensive results.
 
 ## Installation
 
+### Installing via Smithery
+
+To install Code Research Server for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@nahmanmate/code-research-mcp-server):
+
+```bash
+npx -y @smithery/cli install @nahmanmate/code-research-mcp-server --client claude
+```
+
+### Manual Installation
 1. Clone the repository and install dependencies:
 ```bash
 git clone https://github.com/nahmanmate/code-research-mcp-server.git
